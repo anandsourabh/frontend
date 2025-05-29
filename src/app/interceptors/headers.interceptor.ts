@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 @Injectable()
 export class HeadersInterceptor implements HttpInterceptor {
   // Hardcoded values for now
-  private readonly COMPANY_NUMBER = 'CN101770410';
+  private readonly COMPANY_NUMBER = 'CN102269887';
   private readonly USER_ID = '1166505';
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {

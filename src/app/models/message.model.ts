@@ -27,6 +27,8 @@ export interface Message {
   data?: any[];
   error?: string;
   queryResponse?: QueryResponse;
+  isRetryable?: boolean
+  isEditable?: boolean
 }
 
 export interface ChatHistory {
