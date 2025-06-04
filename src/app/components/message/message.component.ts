@@ -137,13 +137,25 @@ template: `
             </button>
           </div>
         </div>
-        <div *ngIf="message.data && message.data.length > 0 && message.queryResponse?.visualization" class="data-section">
+
+        <!-- ENHANCED: Single Value Display -->
+        <div *ngIf="isSingleValueResponse()" class="single-value-section">
+          <div class="single-value-container">
+            <div class="single-value-icon">
+              <mat-icon>{{getSingleValueIcon()}}</mat-icon>
+            </div>
+            <div class="single-value-content">
+              <h3>{{message.summary}}</h3>
+              <p class="single-value-question">Based on your query: "{{message.queryResponse?.question}}"</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Regular Data Display (only show if not single value or has visualization) -->
+        <div *ngIf="message.data && message.data.length > 0 && !isSingleValueResponse() && shouldShowDataSection()" class="data-section">
           <mat-expansion-panel [expanded]="true">
             <mat-expansion-panel-header>
               <mat-panel-title>Query Results ({{message.data.length}} rows)</mat-panel-title>
-              <!--<mat-panel-description *ngIf="message.queryResponse?.response_type">
-                Type: {{message.queryResponse?.response_type}}
-              </mat-panel-description>-->
             </mat-expansion-panel-header>
             
             <div class="data-content">
@@ -440,6 +452,101 @@ template: `
       height: 14px !important;
       margin-right: 8px !important;
     }
+
+    /* SINGLE VALUE DISPLAY STYLES */
+    .single-value-section {
+      margin-top: 16px;
+    }
+
+    .single-value-container {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .single-value-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .single-value-icon {
+      background: white;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+
+    .single-value-icon mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    .single-value-content {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .single-value-content h3 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #293340;
+      line-height: 1.2;
+    }
+
+    .single-value-question {
+      margin: 8px 0 0 0;
+      font-size: 14px;
+      color: #666;
+      font-style: italic;
+    }
+
+    /* Responsive design for single value */
+    @media (max-width: 768px) {
+      .single-value-container {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .single-value-content h3 {
+        font-size: 20px;
+      }
+
+      .single-value-icon {
+        width: 50px;
+        height: 50px;
+      }
+
+      .single-value-icon mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+    }
     
     .sql-section,
     .explanation-section,
@@ -524,8 +631,52 @@ export class MessageComponent {
 
   isSuccessfulResponse(): boolean {
     return this.message.queryResponse?.response_type === 'sql_convertible' ||
+           this.message.queryResponse?.response_type === 'sql_convertible_single_value' ||
            this.message.queryResponse?.response_type === 'property_risk_insurance' ||
            this.message.queryResponse?.response_type === 'data_insights';
+  }
+
+  // NEW: Check if this is a single value response
+  isSingleValueResponse(): boolean {
+    return this.message.queryResponse?.response_type === 'sql_convertible_single_value' ||
+           (this.message.queryResponse?.response_type === 'sql_convertible' && 
+            !this.message.queryResponse?.visualization &&
+            this.message.data?.length === 1 &&
+            this.message.data[0] && 
+            Object.keys(this.message.data[0]).length === 1);
+  }
+
+  // NEW: Check if data section should be shown
+  shouldShowDataSection(): boolean {
+    // Show data section if there's visualization or if it's multi-row/multi-column data
+    return !!(this.message.queryResponse?.visualization) ||
+           (!!this.message.data && 
+            (this.message.data.length > 1 || 
+             (this.message.data.length === 1 && this.message.data[0] && Object.keys(this.message.data[0]).length > 1)));
+  }
+
+  // NEW: Get appropriate icon for single value display
+  getSingleValueIcon(): string {
+    const summary = this.message.summary?.toLowerCase() || '';
+    const question = this.message.queryResponse?.question?.toLowerCase() || '';
+    
+    if (summary.includes('count') || summary.includes('number of')) {
+      return 'numbers';
+    } else if (summary.includes('total') || summary.includes('sum')) {
+      return 'calculate';
+    } else if (summary.includes('average') || summary.includes('avg')) {
+      return 'analytics';
+    } else if (summary.includes('maximum') || summary.includes('max')) {
+      return 'trending_up';
+    } else if (summary.includes('minimum') || summary.includes('min')) {
+      return 'trending_down';
+    } else if (question.includes('revenue') || question.includes('income')) {
+      return 'payments';
+    } else if (question.includes('tiv') || question.includes('insured')) {
+      return 'security';
+    } else {
+      return 'insights';
+    }
   }
 
   // ENHANCED: Generate smart suggestions based on the original query

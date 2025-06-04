@@ -136,6 +136,7 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private chart: any;
   private mapDataPoints: any[] = []; // Store map data for counting
+  private originalData: any[] = []; // Store original formatted data
 
   ngOnInit(): void {
     if (this.data && this.data.length > 0) {
@@ -174,6 +175,11 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     if (this.chart) {
       this.chart.dispose();
+    }
+    
+    // Restore original data if it was cleaned
+    if (this.originalData && this.originalData.length > 0) {
+      this.data = this.originalData;
     }
   }
 
@@ -253,6 +259,9 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
     console.log('Creating chart with type:', chartType);
     console.log('Should show chart controls:', this.shouldShowChartControls());
     
+    // Clean currency formatted data before creating charts
+    this.cleanCurrencyData();
+    
     switch (chartType) {
       case 'bar':
         this.createBarChart();
@@ -297,14 +306,22 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private createBarChart(): void {
     this.chart = am4core.create(this.chartDiv.nativeElement, am4charts.XYChart);
+    
+    // Use cleaned data
     this.chart.data = this.data;
+    console.log('Creating bar chart with cleaned data');
 
     const categoryAxis = this.chart.xAxes.push(new am4charts.CategoryAxis());
     categoryAxis.dataFields.category = this.xAxisControl.value;
     categoryAxis.renderer.minGridDistance = 30;
     categoryAxis.renderer.labels.template.rotation = -45;
+    categoryAxis.renderer.labels.template.horizontalCenter = "right";
+    categoryAxis.renderer.labels.template.verticalCenter = "middle";
 
     const valueAxis = this.chart.yAxes.push(new am4charts.ValueAxis());
+    
+    // Format value axis labels if dealing with large numbers
+    valueAxis.numberFormatter.numberFormat = "#,###.##";
 
     const series = this.chart.series.push(new am4charts.ColumnSeries());
     series.dataFields.valueY = this.yAxisControl.value;
@@ -312,8 +329,11 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
     series.columns.template.fill = am4core.color('#2640e8');
     series.columns.template.stroke = am4core.color('#2640e8');
     
-    // Add value labels on columns
-    series.columns.template.tooltipText = "{categoryX}: [bold]{valueY}[/]";
+    // Add value labels on columns with proper formatting
+    series.columns.template.tooltipText = "{categoryX}: [bold]{valueY.formatNumber('#,###.##')}[/]";
+    
+    // Enable export
+    this.chart.exporting.menu = new am4core.ExportMenu();
   }
 
   private createLineChart(): void {
@@ -358,29 +378,63 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private createPieChart(): void {
     this.chart = am4core.create(this.chartDiv.nativeElement, am4charts.PieChart);
-    console.log(this.data)
+    console.log('Creating pie chart with data:', this.data);
+    
+    // Ensure data is properly cleaned for pie chart
     this.chart.data = this.data;
 
     const pieSeries = this.chart.series.push(new am4charts.PieSeries());
-    pieSeries.dataFields.value = this.numericColumns[0];
-    pieSeries.dataFields.category = this.columns[0];
+    
+    // Use the Y-axis control value for the value field (numeric)
+    pieSeries.dataFields.value = this.yAxisControl.value || this.numericColumns[0];
+    // Use the X-axis control value for the category field
+    pieSeries.dataFields.category = this.xAxisControl.value || this.columns[0];
     
     // Add labels
     pieSeries.labels.template.text = "{category}: {value}";
     pieSeries.slices.template.tooltipText = "{category}: [bold]{value}[/] ({value.percent.formatNumber('#.0')}%)";
+    
+    // Add some visual improvements
+    pieSeries.slices.template.strokeWidth = 2;
+    pieSeries.slices.template.strokeOpacity = 1;
+    
+    // This creates the animation on load
+    pieSeries.hiddenState.properties.opacity = 1;
+    pieSeries.hiddenState.properties.endAngle = -90;
+    pieSeries.hiddenState.properties.startAngle = -90;
+    
+    console.log('Pie chart created with value field:', pieSeries.dataFields.value, 'and category field:', pieSeries.dataFields.category);
   }
 
   private createDonutChart(): void {
     this.chart = am4core.create(this.chartDiv.nativeElement, am4charts.PieChart);
-    this.chart.data = this.data;
     this.chart.innerRadius = am4core.percent(40);
+    
+    console.log('Creating donut chart with data:', this.data);
+    
+    // Ensure data is properly cleaned for donut chart
+    this.chart.data = this.data;
 
     const pieSeries = this.chart.series.push(new am4charts.PieSeries());
-    pieSeries.dataFields.value = this.numericColumns[0];
-    pieSeries.dataFields.category = this.columns[0];
+    
+    // Use the Y-axis control value for the value field (numeric)
+    pieSeries.dataFields.value = this.yAxisControl.value || this.numericColumns[0];
+    // Use the X-axis control value for the category field
+    pieSeries.dataFields.category = this.xAxisControl.value || this.columns[0];
     
     pieSeries.labels.template.text = "{category}";
     pieSeries.slices.template.tooltipText = "{category}: [bold]{value}[/] ({value.percent.formatNumber('#.0')}%)";
+    
+    // Add some visual improvements
+    pieSeries.slices.template.strokeWidth = 2;
+    pieSeries.slices.template.strokeOpacity = 1;
+    
+    // Animation
+    pieSeries.hiddenState.properties.opacity = 1;
+    pieSeries.hiddenState.properties.endAngle = -90;
+    pieSeries.hiddenState.properties.startAngle = -90;
+    
+    console.log('Donut chart created with value field:', pieSeries.dataFields.value, 'and category field:', pieSeries.dataFields.category);
   }
 
   private createScatterChart(): void {
@@ -483,7 +537,7 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
     return false;
   }
 
- private createMapChart(): void {
+  private createMapChart(): void {
     console.log('Creating map chart...');
     
     if (!this.hasGeoData) {
@@ -558,6 +612,82 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // NEW: Clean currency formatted values before charting
+  private cleanCurrencyData(): void {
+    if (!this.data || this.data.length === 0) return;
+    
+    console.log('=== CLEANING CURRENCY DATA FOR CHARTS ===');
+    console.log('Original data sample:', this.data[0]);
+    
+    // Create a cleaned copy of the data for charting
+    const cleanedData = this.data.map(item => {
+      const cleanedItem = { ...item };
+      
+      // Check each property and clean if it's a currency string
+      Object.keys(cleanedItem).forEach(key => {
+        const value = cleanedItem[key];
+        if (typeof value === 'string' && this.isCurrencyString(value)) {
+          const numericValue = this.parseCurrencyValue(value);
+          if (numericValue !== null) {
+            console.log(`Cleaned ${key}: "${value}" -> ${numericValue}`);
+            cleanedItem[key] = numericValue;
+          }
+        }
+      });
+      
+      return cleanedItem;
+    });
+    
+    // Store original data and use cleaned data for charts
+    this.originalData = this.data;
+    this.data = cleanedData;
+    
+    console.log('Cleaned data sample:', this.data[0]);
+    console.log('=== CURRENCY CLEANING COMPLETE ===');
+  }
+
+  // NEW: Check if a string is a formatted currency value
+  private isCurrencyString(value: string): boolean {
+    // Common currency patterns including various symbols and formats
+    // Matches: $1,234.56 or €1.234,56 or £1,234.56 or 1,234.56 USD etc.
+    const currencyPatterns = [
+      /^[A-Z$€£¥₹₽₩₪₦₨₡₵₴₸₺₼₾₱؋﷼]\s?[\d,]+\.?\d*$/,  // Symbol at start
+      /^[\d,]+\.?\d*\s?[A-Z$€£¥₹₽₩₪₦₨₡₵₴₸₺₼₾₱؋﷼]$/,  // Symbol at end
+      /^[\d,]+\.?\d*$/  // Just numbers with commas (likely currency)
+    ];
+    
+    const trimmedValue = value.trim();
+    return currencyPatterns.some(pattern => pattern.test(trimmedValue));
+  }
+
+  // NEW: Parse currency string to numeric value
+  private parseCurrencyValue(value: string): number | null {
+    try {
+      // Remove all non-numeric characters except decimal point and minus sign
+      let cleanedValue = value.replace(/[^0-9.-]/g, '');
+      
+      // Handle cases where there might be multiple decimal points (from different locales)
+      const parts = cleanedValue.split('.');
+      if (parts.length > 2) {
+        // Assume the last part is decimal, join the rest
+        cleanedValue = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
+      }
+      
+      // Parse to float
+      const numericValue = parseFloat(cleanedValue);
+      
+      if (isNaN(numericValue)) {
+        console.warn(`Failed to parse currency value: "${value}"`);
+        return null;
+      }
+      
+      return numericValue;
+    } catch (error) {
+      console.error('Error parsing currency value:', value, error);
+      return null;
+    }
+  }
+
 
   // UPDATED: Enhanced map data preparation
   private prepareMapData(): any[] {
@@ -616,7 +746,19 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
     
     return this.columns.filter(col => {
       const value = this.data[0][col];
-      return typeof value === 'number' || (!isNaN(Number(value)) && value !== null && value !== '');
+      // Check if it's a number or a currency string that can be parsed to a number
+      if (typeof value === 'number') {
+        return true;
+      } else if (typeof value === 'string') {
+        // Check if it's a currency string
+        if (this.isCurrencyString(value)) {
+          const numericValue = this.parseCurrencyValue(value);
+          return numericValue !== null;
+        }
+        // Check if it's a plain numeric string
+        return !isNaN(Number(value)) && value !== null && value !== '';
+      }
+      return false;
     });
   }
 }
