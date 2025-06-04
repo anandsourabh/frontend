@@ -12,7 +12,7 @@ export interface QueryResponse {
   data?: any[];
   visualization?: { [key: string]: string };
   timestamp: string;
-  response_type: string;
+  response_type: string; // Add 'portfolio_dashboard' as a new type
 }
 
 export interface Message {

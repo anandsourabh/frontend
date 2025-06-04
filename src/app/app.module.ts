@@ -37,6 +37,7 @@ import { ChartComponent } from './components/chart/chart.component';
 import { QueryHistoryComponent } from './components/query-history/query-history.component';
 import { SqlCodeComponent } from './components/sql-code/sql-code.component';
 import { ExportDialogComponent } from './components/export-dialog/export-dialog.component';
+import { PortfolioDashboardComponent } from './components/portfolio-dashboard/portfolio-dashboard.component';
 
 // Interceptors
 import { HeadersInterceptor } from './interceptors/headers.interceptor';
@@ -50,7 +51,8 @@ import { HeadersInterceptor } from './interceptors/headers.interceptor';
     ChartComponent,
     QueryHistoryComponent,
     SqlCodeComponent,
-    ExportDialogComponent
+    ExportDialogComponent,
+    PortfolioDashboardComponent
   ],
   imports: [
     BrowserModule,

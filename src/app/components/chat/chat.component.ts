@@ -722,8 +722,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     "What is the total insured value by state?",
     "Show me properties with high earthquake risk",
     "List all buildings built after 2000",
-    "Properties in flood zones",
-    "Show locations on map"
+    "What is the importance of AAL in Property Risk Management",
+    "Show locations on map",
+    "Can you provide me a portfolio overview?"
   ];
   
   private destroy$ = new Subject<void>();

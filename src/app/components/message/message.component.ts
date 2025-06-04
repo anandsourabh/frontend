@@ -151,6 +151,14 @@ template: `
           </div>
         </div>
 
+        <!-- Portfolio Dashboard Display -->
+      <div *ngIf="isPortfolioDashboard()" class="portfolio-dashboard-wrapper">
+        <app-portfolio-dashboard 
+          [dashboardData]="message.data?.[0]"
+          [currencySymbol]="message?.data?.[0]?.currency_symbol || '$'">
+        </app-portfolio-dashboard>
+      </div>
+
         <!-- Regular Data Display (only show if not single value or has visualization) -->
         <div *ngIf="message.data && message.data.length > 0 && !isSingleValueResponse() && shouldShowDataSection()" class="data-section">
           <mat-expansion-panel [expanded]="true">
@@ -595,6 +603,11 @@ template: `
       width: 14px;
       height: 14px;
     }
+
+    .portfolio-dashboard-wrapper {
+      margin-top: 16px;
+      width: 100%;
+    }
   `]
 })
 export class MessageComponent {
@@ -799,5 +812,9 @@ export class MessageComponent {
     if (this.message.queryResponse?.question) {
       this.useSuggestion.emit(this.message.queryResponse.question);
     }
+  }
+
+  isPortfolioDashboard(): boolean {
+  return this.message.queryResponse?.response_type === 'portfolio_dashboard';
   }
 }
