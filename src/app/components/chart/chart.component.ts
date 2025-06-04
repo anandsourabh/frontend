@@ -358,6 +358,7 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private createPieChart(): void {
     this.chart = am4core.create(this.chartDiv.nativeElement, am4charts.PieChart);
+    console.log(this.data)
     this.chart.data = this.data;
 
     const pieSeries = this.chart.series.push(new am4charts.PieSeries());
@@ -448,7 +449,7 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
     const hasLatLng = this.columns.some(col => {
       const colLower = col.toLowerCase();
       return colLower === 'latitude' || colLower === 'longitude' || 
-             colLower === 'lat' || colLower === 'lng' ||
+             colLower === 'recommended_latitude' || colLower === 'recommended_longitude' ||
              colLower === 'latitude_decimal' || colLower === 'longitude_decimal';
     });
     
@@ -459,11 +460,11 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
     if (hasLatLng) {
       const latCol = this.columns.find(col => {
         const colLower = col.toLowerCase();
-        return colLower === 'latitude' || colLower === 'lat' || colLower === 'latitude_decimal';
+        return colLower === 'latitude' || colLower === 'recommended_latitude' || colLower === 'latitude_decimal';
       });
       const lngCol = this.columns.find(col => {
         const colLower = col.toLowerCase();
-        return colLower === 'longitude' || colLower === 'lng' || colLower === 'longitude_decimal';
+        return colLower === 'longitude' || colLower === 'recommended_longitude' || colLower === 'longitude_decimal';
       });
       
       if (latCol && lngCol) {
@@ -482,8 +483,7 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
     return false;
   }
 
-  // UPDATED: Enhanced createMapChart method that stores data points
-  private createMapChart(): void {
+ private createMapChart(): void {
     console.log('Creating map chart...');
     
     if (!this.hasGeoData) {
@@ -512,15 +512,12 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
       const pointTemplate = pointSeries.mapImages.template;
       pointTemplate.propertyFields.latitude = "latitude";
       pointTemplate.propertyFields.longitude = "longitude";
-      pointTemplate.nonScaling = true;
       
       // Create circle for each point
       const circle = pointTemplate.createChild(am4core.Circle);
-      circle.radius = 8;
+      circle.radius = 0.5; // You can adjust this value as needed
       circle.fill = am4core.color('#2640e8');
-      circle.stroke = am4core.color('#ffffff');
-      circle.strokeWidth = 2;
-      circle.nonScaling = true;
+
       
       // Add tooltip
       circle.tooltipText = "{title}: Lat {latitude}, Lng {longitude}";
@@ -560,6 +557,7 @@ export class ChartComponent implements OnInit, OnDestroy, AfterViewInit {
       this.createBarChart();
     }
   }
+
 
   // UPDATED: Enhanced map data preparation
   private prepareMapData(): any[] {

@@ -152,6 +152,18 @@ export class DataTableComponent implements OnInit {
   constructor(private dialog: MatDialog) {}
 
   ngOnInit(): void {
+  if (this.data && this.data.length > 0) {
+    // TEMPORARY DEBUG - Add this to your existing component
+    console.log('=== CURRENCY DEBUG ===');
+    const firstRow = this.data[1];
+    Object.keys(firstRow).forEach(key => {
+      if (key.includes('value') || key.includes('tiv') || key.includes('income') || key.includes('revenue')) {
+        console.log(`${key}: "${firstRow[key]}" (type: ${typeof firstRow[key]})`);
+      }
+    });
+        console.log('=====================');
+  }
+
     if (this.data && this.data.length > 0) {
       this.displayedColumns = Object.keys(this.data[0]);
       this.dataSource.data = this.data;

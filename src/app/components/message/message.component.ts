@@ -137,22 +137,7 @@ template: `
             </button>
           </div>
         </div>
-        
-        <div *ngIf="message.sqlQuery && !message.isUser" class="sql-section">
-          <app-sql-code [sql]="message.sqlQuery" (rerun)="onRerun()"></app-sql-code>
-        </div>
-        
-        <!-- Only show AI Explanation for successful SQL queries -->
-        <div *ngIf="message.explanation && !message.isUser && message.queryResponse?.response_type === 'sql_convertible'" class="explanation-section">
-          <mat-expansion-panel>
-            <mat-expansion-panel-header>
-              <mat-panel-title>AI Explanation</mat-panel-title>
-            </mat-expansion-panel-header>
-            <div [innerHTML]="getFormattedExplanation()"></div>
-          </mat-expansion-panel>
-        </div>
-        
-        <div *ngIf="message.data && message.data.length > 0" class="data-section">
+        <div *ngIf="message.data && message.data.length > 0 && message.queryResponse?.visualization" class="data-section">
           <mat-expansion-panel [expanded]="true">
             <mat-expansion-panel-header>
               <mat-panel-title>Query Results ({{message.data.length}} rows)</mat-panel-title>
@@ -176,7 +161,21 @@ template: `
             </div>
           </mat-expansion-panel>
         </div>
-        
+
+                <!-- Only show AI Explanation for successful SQL queries -->
+        <div *ngIf="message.explanation && !message.isUser && message.queryResponse?.response_type === 'sql_convertible'" class="explanation-section">
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>AI Explanation</mat-panel-title>
+            </mat-expansion-panel-header>
+            <div [innerHTML]="getFormattedExplanation()"></div>
+          </mat-expansion-panel>
+        </div>
+
+        <div *ngIf="message.sqlQuery && !message.isUser" class="sql-section">
+          <app-sql-code [sql]="message.sqlQuery" (rerun)="onRerun()"></app-sql-code>
+        </div>
+      
         <!-- AI Generated Notice - only for successful responses -->
         <div *ngIf="!message.isUser && message.status !== 'error' && isSuccessfulResponse()" class="ai-notice">
           <mat-icon>info</mat-icon>
