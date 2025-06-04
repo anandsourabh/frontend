@@ -30,16 +30,6 @@ am4core.useTheme(am4themes_animated);
           </div>
         </div>
 
-        <div class="metric-card">
-          <div class="metric-icon">
-            <mat-icon>business</mat-icon>
-          </div>
-          <div class="metric-content">
-            <h3>{{formatNumber(dashboardData?.summary_metrics?.total_buildings)}}</h3>
-            <p>Total Buildings</p>
-          </div>
-        </div>
-
         <div class="metric-card highlight">
           <div class="metric-icon">
             <mat-icon>account_balance</mat-icon>
@@ -157,6 +147,69 @@ am4core.useTheme(am4themes_animated);
         </div>
       </div>
 
+      <!-- Country Distribution Table - New Distinct Design -->
+      <div class="country-distribution-section">
+        <div class="distribution-header">
+          <h3>
+            <mat-icon>language</mat-icon> 
+            Global Value Distribution by Country
+          </h3>
+          <p class="distribution-subtitle">Total Insured Value (TIV) and Business Interruption Value (BIV) Analysis</p>
+        </div>
+        
+        <div class="distribution-cards">
+          <div class="distribution-card" 
+              *ngFor="let country of getTopCountries(); let i = index"
+              [class.top-three]="i < 3">
+            
+            <div class="country-rank" *ngIf="i < 3">
+              <span class="rank-number">{{i + 1}}</span>
+              <mat-icon class="rank-icon">{{getRankIcon(i)}}</mat-icon>
+            </div>
+            
+            <div class="country-header">
+              <img [src]="getCountryFlag(country.country)" 
+                  [alt]="country.country" 
+                  class="country-flag"
+                  (error)="onFlagError($event)">
+              <div class="country-info">
+                <h4>{{getCountryName(country.country)}}</h4>
+                <span class="location-count">{{country.location_count}} locations</span>
+              </div>
+            </div>
+            
+            <div class="value-grid">
+              <div class="value-item tiv">
+                <div class="value-label">
+                  <mat-icon>security</mat-icon>
+                  <span>Total Insured Value</span>
+                </div>
+                <div class="value-amount">{{country.total_tiv}}</div>
+                <div class="value-avg">Avg: {{country.avg_tiv}}</div>
+              </div>
+              
+              <div class="value-item biv">
+                <div class="value-label">
+                  <mat-icon>business_center</mat-icon>
+                  <span>Business Interruption (12mo)</span>
+                </div>
+                <div class="value-amount">{{country.total_biv_12mo}}</div>
+                <div class="value-avg">Avg: {{country.avg_biv_12mo}}</div>
+              </div>
+            </div>
+            
+            <div class="ratio-indicator">
+              <div class="ratio-bar">
+                <div class="ratio-fill" [style.width]="country.biv_to_tiv_ratio"></div>
+              </div>
+              <div class="ratio-text">
+                <span>BIV/TIV Ratio:</span>
+                <strong>{{country.biv_to_tiv_ratio}}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Top Locations Table -->
       <div class="top-locations-section">
         <h3>Top 10 Locations by TIV</h3>
@@ -470,6 +523,226 @@ am4core.useTheme(am4themes_animated);
         grid-template-columns: 1fr 1fr;
       }
     }
+    /* Country Distribution Section - Distinct & Attractive Design */
+.country-distribution-section {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.country-distribution-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2640e8 0%, #1a2cb8 50%, #0f1d94 100%);
+}
+
+.distribution-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.distribution-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #293340;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.distribution-header h3 mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  color: #2640e8;
+}
+
+.distribution-subtitle {
+  margin: 8px 0 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.distribution-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px;
+}
+
+.distribution-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.distribution-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  border-color: #e0e7ff;
+}
+
+.distribution-card.top-three {
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8efff 100%);
+  border-color: #d0ddff;
+}
+
+.country-rank {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.rank-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2640e8;
+}
+
+.rank-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.country-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.country-flag {
+  width: 48px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.country-info h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #293340;
+}
+
+.location-count {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.value-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.value-item {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.value-item.tiv {
+  border-left: 4px solid #2640e8;
+}
+
+.value-item.biv {
+  border-left: 4px solid #4caf50;
+}
+
+.value-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.value-label mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.value-label span {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.value-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #293340;
+  margin-bottom: 4px;
+}
+
+.value-avg {
+  font-size: 11px;
+  color: #999;
+}
+
+.ratio-indicator {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.ratio-bar {
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.ratio-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2640e8 0%, #4caf50 100%);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.ratio-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.ratio-text span {
+  color: #666;
+}
+
+.ratio-text strong {
+  color: #293340;
+  font-weight: 600;
+}
   `]
 })
 export class PortfolioDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -785,5 +1058,44 @@ export class PortfolioDashboardComponent implements OnInit, AfterViewInit, OnDes
   } else {
     return this.currencySymbol + numericValue.toFixed(0);
   }
+}
+
+getTopCountries(): any[] {
+  return this.dashboardData?.country_distribution || [];
+}
+
+getRankIcon(index: number): string {
+  const icons = ['emoji_events', 'military_tech', 'grade'];
+  return icons[index] || 'star';
+}
+
+getCountryFlag(countryCode: string): string {
+  if (!countryCode || countryCode.length !== 2) {
+    return 'assets/flags/default.png';
+  }
+  return `https://flagcdn.com/48x36/${countryCode.toLowerCase()}.png`;
+}
+
+onFlagError(event: any): void {
+  event.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSIzNiIgdmlld0JveD0iMCAwIDQ4IDM2Ij48cmVjdCB3aWR0aD0iNDgiIGhlaWdodD0iMzYiIGZpbGw9IiNlMGUwZTAiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSI+RmxhZzwvdGV4dD48L3N2Zz4=';
+}
+
+getCountryName(countryCode: string): string {
+  const countryNames: {[key: string]: string} = {
+    'US': 'United States',
+    'GB': 'United Kingdom',
+    'CA': 'Canada',
+    'AU': 'Australia',
+    'DE': 'Germany',
+    'FR': 'France',
+    'JP': 'Japan',
+    'CN': 'China',
+    'IN': 'India',
+    'BR': 'Brazil',
+    'MX': 'Mexico',
+    // Add more country mappings as needed
+  };
+  
+  return countryNames[countryCode] || countryCode;
 }
 }

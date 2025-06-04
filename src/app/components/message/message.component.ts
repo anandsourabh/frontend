@@ -160,7 +160,7 @@ template: `
       </div>
 
         <!-- Regular Data Display (only show if not single value or has visualization) -->
-        <div *ngIf="message.data && message.data.length > 0 && !isSingleValueResponse() && shouldShowDataSection()" class="data-section">
+        <div *ngIf="message.data && message.data.length > 0 && !isSingleValueResponse() && shouldShowDataSection() && !isPortfolioDashboard()" class="data-section">
           <mat-expansion-panel [expanded]="true">
             <mat-expansion-panel-header>
               <mat-panel-title>Query Results ({{message.data.length}} rows)</mat-panel-title>
@@ -183,7 +183,7 @@ template: `
         </div>
 
                 <!-- Only show AI Explanation for successful SQL queries -->
-        <div *ngIf="message.explanation && !message.isUser && message.queryResponse?.response_type === 'sql_convertible'" class="explanation-section">
+        <div *ngIf="message.explanation && !message.isUser && message.queryResponse?.response_type === 'sql_convertible' && !isPortfolioDashboard()" class="explanation-section">
           <mat-expansion-panel>
             <mat-expansion-panel-header>
               <mat-panel-title>AI Explanation</mat-panel-title>
@@ -192,7 +192,7 @@ template: `
           </mat-expansion-panel>
         </div>
 
-        <div *ngIf="message.sqlQuery && !message.isUser" class="sql-section">
+        <div *ngIf="message.sqlQuery && !message.isUser && !isPortfolioDashboard()" class="sql-section">
           <app-sql-code [sql]="message.sqlQuery" (rerun)="onRerun()"></app-sql-code>
         </div>
       
